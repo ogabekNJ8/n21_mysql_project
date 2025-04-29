@@ -90,10 +90,37 @@ const removeStadionById = (req, res) => {
   });
 };
 
+const getStadionByPrice = (req, res) => {
+  const { price } = req.body;
+  db.query(
+    `select s.name, s.address, s.price, b.start_time, b.end_time FROM stadium s 
+    JOIN booking b 
+    ON b.stadion_id = s.id
+    WHERE ${price} > s.price AND (
+    (
+      SUBSTRING_INDEX(b.end_time, ':', 1) * 60 +
+      SUBSTRING_INDEX(b.end_time, ':', -1)
+    )  
+    -
+    (
+      SUBSTRING_INDEX(b.start_time, ':', 1) * 60 +
+      SUBSTRING_INDEX(b.start_time, ':', -1)
+    )
+  ) > 120; `,
+    (error, result) => {
+      if (error) {
+        return res.status(500).send({ message: "Server xatosi!" });
+      }
+      res.send(result);
+    }
+  );
+};
+
 module.exports = {
   getStadionAll,
   getOneStadionById,
   createStadion,
   removeStadionById,
   updateStadionById,
+  getStadionByPrice,
 };
